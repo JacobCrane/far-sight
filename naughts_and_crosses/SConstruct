@@ -1,0 +1,50 @@
+import os.path
+import glob
+
+mainfile = ARGUMENTS.get('main', 'main')
+optimise = ARGUMENTS.get('optimise', 0)
+paranoid = ARGUMENTS.get('paranoid', 1)
+profile = ARGUMENTS.get('profile', 0)
+quiet = ARGUMENTS.get('quiet', 0)
+
+# Use colours
+# <ESC>[{attr};{fg};{bg}m
+red = "\033[1;31m"
+yellow = "\033[1;33m"
+green = "\033[1;32m"
+blue = "\033[1;34m"
+off = "\033[0m"
+
+# default output format for messaging
+def message(colour, text):
+    print colour + "[build] " + text + off
+
+comp_switches = '-Wall -std=gnu++14 -g '
+preproc = ''
+libs = ''
+link_switches = ''
+inc_dirs = 'inc '
+lib_dirs = ''
+lib_src = glob.glob('src/*.cpp')
+main_src = [mainfile + '.cpp']
+all_src = lib_src + main_src
+binary = mainfile + '.out'
+
+if int(optimise):
+    comp_switches += '-O3 '
+if int(paranoid):
+    preproc += '-DPARANOID '
+if int(quiet):
+    preproc += '-DQUIET '
+if int(profile):
+    comp_switches += '-pg '
+    link_switches += '-pg '
+
+inc_dir_list = inc_dirs.split()
+lib_dir_list = lib_dirs.split()
+
+env = Environment(ENV = os.environ, FORTRAN = 'gfortran', CXX = 'g++', CPPPATH = inc_dir_list, CCFLAGS = comp_switches + preproc, LINKFLAGS = link_switches , LIBS = libs.split(), LIBPATH = lib_dir_list)
+
+message(red, 'Building target')
+env.Program(target = binary, source = all_src)
+
